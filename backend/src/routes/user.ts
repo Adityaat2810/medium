@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { Hono } from 'hono';
 import { sign } from 'hono/jwt'
+import { signUpInput ,signInInput} from '@adityaat2810/medium-blog';
+
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -12,48 +14,42 @@ export const userRouter = new Hono<{
 
 
 userRouter.post('/signup', async (c) => {
-    console.log('Received signup request');
-  
-    const { DATABASE_URL } = c.env;
-    if (!DATABASE_URL) {
-      console.error('DATABASE_URL is not defined');
-      c.status(500);
-      return c.json({ error: 'Internal server error' });
-    }
+   
   
     const prisma = new PrismaClient({
-      datasourceUrl: DATABASE_URL,
+      datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
   
     try {
       const body = await c.req.json();
-      console.log('Request body:', body);
-  
-      //TODO use zod validation and bcrypt 
-      const { email, password, name } = body;
-      if (!email || !password || !name) {
-        console.error('Missing required fields');
-        c.status(400);
-        return c.json({ error: 'Missing required fields' });
+      const { success } = signUpInput.safeParse(body)
+      if(!success){
+
+        c.status(411);
+        return c.json({
+          message:"input not correct"
+        })
       }
+      
   
+   
       const user = await prisma.user.create({
         data: {
-          email,
-          password,
-          name,
+          email:body.email,
+          password:body.password,
+          name:body.name,
         },
       });
   
       const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-          return c.json({ jwt });
-  
-      console.log('User created:', user);
-      return c.json({ message: 'Signup success' });
+      return c.json({ jwt });
+
     } catch (error) {
+
       console.error('Error during signup:', error);
       c.status(500);
       return c.json({ error: 'Error during signup' });
+
     } finally {
       await prisma.$disconnect();
     }
