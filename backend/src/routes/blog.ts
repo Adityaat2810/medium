@@ -111,15 +111,28 @@ blogRouter.get('/:id',async (c)=>{
 
 
 // Todo:pagination
-blogRouter.get('/bulk',async (c)=>{
+blogRouter.get('/all/bulk', async (c) => {
 
-    const prisma = new PrismaClient({
-        datasourceUrl:c.env.DATABASE_URL,
-    }).$extends(withAccelerate());
+  
+    try {
 
-   const blogs = await prisma.post.findMany()
+        console.log(' i am here');
+        
+        const prisma = new PrismaClient({
+            datasourceUrl:c.env.DATABASE_URL,
+        }).$extends(withAccelerate());
 
-   return c.json({
-    data:blogs
-   })
-})
+        const blogs = await prisma.post.findMany();
+        console.log(blogs);
+        
+        return c.json({
+            blogs
+        });
+    } catch (error) {
+        console.log(error);
+        
+        return c.json({
+            error
+        });
+    }
+});
