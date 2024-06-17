@@ -22,9 +22,12 @@ export const AuthComponet = ({ type }: { type: "signup" | "signin" }) => {
             const resp = await axios.post(`${BACKEND_URL}/api/v1/user/${type==="signup"?"signup":"signin"}`,postInputs)
             const jwt = resp.data
             localStorage.setItem("token", jwt)
-            navigate('/blog')
+            navigate('/blogs')
         }catch(e){
             // alert user if request fails
+            alert("error while signing up")
+            console.log(e);
+            
         }
     }
 
